@@ -1,432 +1,169 @@
 # Typescript BigNumber
 
-A native big decimal NPM library for typescript using BigInt class to support 18 digit floating point number arithmetics with high precision in the range -1e36 to 1e36, inclusive.
+A native big decimal NPM library for Typescript using the `BigInt` class. It supports fixed-point decimal arithmetic with 18 decimal places in the range -1e36 to 1e36, inclusive.
 
 [![npm version](https://img.shields.io/npm/v/typescript-bignumber.svg)](https://www.npmjs.com/package/typescript-bignumber)
 [![npm downloads](https://img.shields.io/npm/dw/typescript-bignumber)](https://www.npmjs.com/package/typescript-bignumber)
 
 ## Features
 
-* Support for floating-point numbers in the range [-1e36, 1e36] with 18 digit precision.
+* Support for fixed-point numbers in the range [-1e36, 1e36] with 18 decimal places.
+* Static constructors: `copysign()`, `fromBigInt()`, `fromString()`.
+* Static constants: `E`, `EULER`, `INF`, `POSITIVE_INFINITY`, `NEG_INF`, `NEGATIVE_INFINITY`, `LN_10`, `LN_2`, `PI`.
+* Type conversion methods: `toBigInt()`, `toString()`, `toInteger()`.
+* Type check methods: `isInteger()`, `isPositive()`.
+* Arithmetic conversion methods: `abs()`, `ceil()`, `floor()`, `inv()`, `neg()`, `round()`, `trunc()`.
+* Logic comparison methods: `equals()`, `gt()`, `greaterThan()`, `gte()`, `greaterThanOrEqual()`, `lt()`, `lessThan()`, `lte()`, `lessThanOrEqual()`.
+* Arithmetic operations: `add()`, `sub()`, `mul()`, `div()`, `mod()`.
 
-* Include all methods of JS `Number` class.
-
-* **Static Constructors**: `copysign()`, `fromBigInt()`, `fromString()`. The library does not include a `fromNumber()` function to preserve precision.
-
-* **Static Constants** (18 precision digits): `BigNumber.EULER` (`BigNumber.E`), `BigNumber.INF` (`BigNumber.POSITIVE_INFINITY`), `BigNumber.NEG_INF` (`BigNumber.NEGATIVE_INFINITY`), `BigNumber.LN_10`, `BigNumber.LN_2`, `BigNumber.PI`.
-
-* **Type Conversion Methods**: `toBigInt()` (rounds to closest `BigInt`), `toString()`, `toInteger` (rounds to closest integer `string`). You may use these methods for printing or memory-optimized storing.
-
-* **Type Check Methods**: `isInteger()` and `isPositive()`.
-
-* **Arithmetic Conversion Methods**: `abs()`, `ceil()`, `floor()`, `inv()`, `neg()`, `round()`, `trunc()`. All these methods act identic to JS `Math` class equivalent methods.
-
-* **Logic Comparison Methods**: `equals()`, `greaterThan()`, `greaterThanOrEqual()`, `lessThan()`, `lessThanOrEqual()`.
-
-* **Arithmetic Operations**: `add()`, `sub()`, `mul()`, `div()`, `mod()`. The `mod()` method may differ from JS `Number` class the mod operator (`%`) in some cases. Please see below for details.
-
-See below about the details of methods and properties of the class.
+The library does not include a `fromNumber()` function to preserve precision.
 
 ## Installation
 
-You can include the library in any npm project. See below about the details of methods and properties of the class.
+Node.js 22 or newer is required.
 
-```
-npm install -s typescript-bignumber
+```sh
+npm install typescript-bignumber
 ```
 
 ## Usage
 
-Once imported, you can use `BigNumber` on any typescript project.
+Once imported, you can use `BigNumber` in any Typescript project.
 
 ```ts
-import { BigNumber } from 'typescript-bignumber'
+import { BigNumber } from 'typescript-bignumber';
 
-const x = BigNumber.fromString("1.28");
+const x = BigNumber.fromString('1.28');
+const y = BigNumber.fromBigInt(2n);
 
-console.log(x.toString());
+console.log(x.mul(y).toString()); // 2.56
 ```
 
-## Static Constructors
+## Creating a BigNumber
 
-You can create a new `BigNumber` by these methods. Because of security and precision reasons, the class does not include a public constructor.
-
-### BigNumber.copysign()
-
-This function takes two `BigNumber` as argument and returns the first argument with the sign of the second argument.
+You can create a new `BigNumber` by using `fromString()` or `fromBigInt()`. The class does not include a public constructor.
 
 ```ts
-const x = BigNumber.fromString("1.2");
-const y = BigNumber.fromString("-1");
-
-const z = BigNumber.copysign(x, y);
-
-console.log(z.toString()); // Prints -1.2
+const x = BigNumber.fromString('12.374738');
+const y = BigNumber.fromBigInt(12489203475n);
 ```
 
-### BigNumber.fromBigInt()
-
-You can create a `BigNumber` directly from a `BigInt`. Only integers may be created by this method.
+`fromString()` supports a dot or comma as the decimal separator and also supports scientific notation.
 
 ```ts
-const x = BigNumber.fromBigInt(12489203475n); // or BigNumber.fromBigInt(BigInt(12489203475));
+const x = BigNumber.fromString('12,374738');
+const y = BigNumber.fromString('1.27e-5');
 ```
 
-### BigNumber.fromString()
-
-You may create a floating-point number using this method from a string.
+If the given number has more than 18 decimal places, it is rounded to the 18th decimal place. Ties are rounded away from zero.
 
 ```ts
-const x = BigNumber.fromString("12.374738");
+const x = BigNumber.fromString('1.9999999999999999999');
+
+console.log(x.toString()); // 2
 ```
 
-The library also supports using a comma (",") instead of a dot (".") to seperate the decimal part.
+`copysign()` takes two `BigNumber` instances and returns the first argument with the sign of the second argument.
 
 ```ts
-const y = BigNumber.fromString("12,374738");
+const x = BigNumber.fromString('1.2');
+const sign = BigNumber.fromString('-1');
+
+console.log(BigNumber.copysign(x, sign).toString()); // -1.2
 ```
 
-You may also use a scientific notation string to create a `BigNumber`.
+## Formatting and Conversion
+
+`toString()` serializes the instance without unnecessary trailing zeros. Pass `true` to always include all 18 decimal places.
 
 ```ts
-const z = BigNumber.fromString("1.27e-5");
+const x = BigNumber.fromString('12.54');
+
+console.log(x.toString());     // 12.54
+console.log(x.toString(true)); // 12.540000000000000000
 ```
 
-The number is rounded to 18th decimal if more than 18 decimals exist.
+`toBigInt()` returns the closest `BigInt`. `toInteger()` returns the same rounded integer as a string.
 
 ```ts
-const w = BigNumber.fromString(1.9999999999999999999);
+const x = BigNumber.fromString('12.54');
 
-console.log(w.toString()); // Prints 2.000000000000000000
+console.log(x.toBigInt());  // 13n
+console.log(x.toInteger()); // 13
+```
+
+`toBigInt()`, `toInteger()`, and `round()` follow `Math.round()` behavior. Ties are rounded toward positive infinity.
+
+```ts
+console.log(BigNumber.fromString('-1.5').round().toString()); // -1
 ```
 
 ## Static Constants
 
-Commonly used mathematical constants are defined under the class rounded to the 18th decimal precision.
-You can access positive and negative infinities to have boundries on the `BigNumber` elements. All members of this class are in between these boundries, inclusive.
-
-### BigNumber.E
-
-You may also use `BigNumber.EULER`.
+Commonly used mathematical constants are defined under the class and rounded to 18 decimal places.
 
 ```ts
-console.log(BigNumber.E.toString()); // 2.718281828459045235
+BigNumber.E;     // Also available as BigNumber.EULER
+BigNumber.LN_10;
+BigNumber.LN_2;
+BigNumber.PI;
 ```
 
-### BigNumber.INF
-
-You may also use `BigNumber.POSITIVE_INFINITY`.
+`INF` and `NEG_INF` are the finite upper and lower bounds of the library. They are also available as `POSITIVE_INFINITY` and `NEGATIVE_INFINITY`.
 
 ```ts
-console.log(BigNumber.INF.toString()); // 1e36
+console.log(BigNumber.INF.toString());
+// 1000000000000000000000000000000000000
+
+console.log(BigNumber.NEG_INF.toString());
+// -1000000000000000000000000000000000000
 ```
 
-### BigNumber.NEG_INF
+## Methods
 
-You may also use `BigNumber.NEGATIVE_INFINITY`.
+Methods that return a `BigNumber` create a new instance and do not change the existing instance.
+
+| Method | Description |
+| --- | --- |
+| `abs()` | Returns the absolute value. |
+| `ceil()` | Returns the smallest integer greater than or equal to the value. |
+| `floor()` | Returns the largest integer less than or equal to the value. |
+| `inv()` | Returns the inverse of the value. |
+| `neg()` | Returns the negation of the value. |
+| `round()` | Returns the value rounded to the closest integer. |
+| `trunc()` | Returns the integer part by removing fractional digits. |
+| `equals(other)` | Checks if both values are equal. |
+| `gt(other)`, `greaterThan(other)` | Checks if the value is greater than `other`. |
+| `gte(other)`, `greaterThanOrEqual(other)` | Checks if the value is greater than or equal to `other`. |
+| `lt(other)`, `lessThan(other)` | Checks if the value is less than `other`. |
+| `lte(other)`, `lessThanOrEqual(other)` | Checks if the value is less than or equal to `other`. |
+| `add(other)` | Adds `other` to the value. |
+| `sub(other)` | Subtracts `other` from the value. |
+| `mul(other)` | Multiplies the value by `other`. |
+| `div(other)` | Divides the value by `other`. |
+| `mod(other)` | Returns the remainder of division by `other`. |
+
+Multiplication and division results are rounded to 18 decimal places. Ties are rounded away from zero.
+
+`mod()` follows the Javascript remainder operator (`%`), including its behavior with negative numbers.
 
 ```ts
-console.log(BigNumber.NEG_INF.toString()); // -1e36
+const x = BigNumber.fromString('126.289');
+const y = BigNumber.fromString('34.433');
+
+console.log(x.add(y).toString()); // 160.722
+console.log(x.sub(y).toString()); // 91.856
+console.log(x.mul(y).toString()); // 4348.509137
+console.log(x.div(y).toString()); // 3.667673452792379403
+console.log(x.mod(y).toString()); // 22.99
 ```
 
-### BigNumber.LN_10
+`isInteger()` checks if the value is an integer. `isPositive()` checks if the value is greater than zero; zero is not positive.
 
-```ts
-console.log(BigNumber.LN_10.toString()); // 2.302585092994045684
-```
+## Range and Errors
 
-### BigNumber.LN_2
+All values and operation results must be in the range [-1e36, 1e36], inclusive.
 
-```ts
-console.log(BigNumber.LN_2.toString()); // 0.693147180559945309
-```
-
-### BigNumber.PI
-
-```ts
-console.log(BigNumber.LN_10.toString()); // 3.141592653589793238
-```
-
-## Type Conversion Methods
-
-Use these methods for printing or memory-optimized storing.
-
-### BigNumber.toBigInt()
-
-Rounds and returns the closest `BigInt` to this instance.
-
-```ts
-const x = BigNumber.fromString("12.54");
-
-console.log(x.toBigInt()); // Prints 13n
-```
-
-### BigNumber.toString()
-
-Serializes this instance to a `string`.
-
-```ts
-const x = BigNumber.fromString("12.54");
-
-console.log(x.toString()); // Prints 12.54
-```
-
-### BigNumber.toInteger()
-
-Rounds this instance to the closest integers and returns it as a `string` .
-
-```ts
-const x = BigNumber.fromString("12.54");
-
-console.log(x.toInteger()); // Prints 13
-```
-
-## Type Check Methods
-
-Check type-related properties of `BigNumber` instances.
-
-### BigNumber.isInteger()
-
-Returns a `boolean` representing if this instance is an `integer`.
-
-```ts
-const x = BigNumber.fromString("12.54");
-const y = BigNumber.fromString("13");
-
-console.log(x.isInteger()); // Prints false
-console.log(y.isInteger()); // Prints true
-```
-
-Please note the default precision of the library is 18 digits.
-
-```ts
-const x = BigNumber.fromString("12.9999999999999999995"); // This number is rounded to 13 as it has more than 18 floating-point numbers.
-
-console.log(x.isInteger()); // Prints true
-```
-
-### BigNumber.isPositive()
-
-Returns a `boolean` representing if this instance is positive.
-
-```ts
-const x = BigNumber.fromString("12.54");
-const y = BigNumber.fromString("-45.233");
-
-console.log(x.isPositive()); // Prints true
-console.log(y.isPositive()); // Prints false
-```
-
-## Arithmetic Conversion Methods
-
-Convert instances of the `BigNumber` class using different mathematical functions.
-
-**Important**: These methods are identical to the their equivalent in the standart `Math` library of javascript.
-
-### BigNumber.abs()
-
-Returns the absolute value of this instance.
-
-```ts
-const x = BigNumber.fromString("-34.90");
-
-console.log(x.abs()); // Prints 34.90
-```
-
-### BigNumber.ceil()
-
-Always rounds up and returns the smaller `integer` greater than or equal to this instance.
-
-```ts
-const x = BigNumber.fromString("34.90");
-const y = BigNumber.fromString("34.0");
-
-console.log(x.ceil()); // Prints 35
-console.log(y.ceil()); // Prints 34
-```
-
-### BigNumber.floor()
-
-Always rounds down and returns the largest `integer` less than or equal to this instance.
-
-```ts
-const x = BigNumber.fromString("34.90");
-const y = BigNumber.fromString("34.0");
-
-console.log(x.floor()); // Prints 34
-console.log(y.floor()); // Prints 34
-```
-
-### BigNumber.inv()
-
-Takes the inverse of this instance.
-It is equivalent to dividing 1 by this instance: `BigNumber.fromString("1").div(this)`.
-
-```ts
-const x = BigNumber.fromString("34.90");
-
-console.log(x.inv()); // Prints 0.028653295128939828
-```
-
-### BigNumber.neg()
-
-Takes the negation of this instance.
-It is equivalent to multipliying this instance with -1. `this.mul(BigNumber.fromString("-1"))`.
-
-```ts
-const x = BigNumber.fromString("34.90");
-
-console.log(x.inv()); // Prints -34.9
-```
-
-### BigNumber.round()
-
-Returns the value of this instance rounded to the nearest integer.
-
-```ts
-const x = BigNumber.fromString("34.5");
-const y = BigNumber.fromString("34.49");
-
-console.log(x.round()); // Prints 35
-console.log(y.round()); // Prints 34
-```
-
-### BigNumber.trunc()
-
-Returns the integer part of this instance by removing any fractional digits.
-
-```ts
-const x = BigNumber.fromString("34.9");
-const y = BigNumber.fromString("-34.9");
-
-console.log(x.trunc()); // Prints 34
-console.log(y.trunc()); // Prints -34
-```
-
-## Logic Comparison Methods
-
-### BigNumber.equals
-
-Returns a `boolean` representing if this instance equal to the given argument.
-
-```ts
-const x = BigNumber.fromString("67.9");
-const y = BigNumber.fromString("67.9");
-
-console.log(x.equals(y)); // Prints true
-```
-
-### BigNumber.greaterThan _or_ BigNumber.gt
-
-Returns a `boolean` representing if this instance is strictly greater than the given argument.
-`BigNumber.greaterThan` and `BigNumber.gt` are totally equivalent, the long or short syntax may be preferred.
-
-```ts
-const x = BigNumber.fromString("67.9");
-const y = BigNumber.fromString("67.8");
-
-console.log(x.greaterThan(y)); // Prints true
-console.log(x.gt(y)); // Prints true
-```
-
-### BigNumber.greaterThanOrEqual _or_ BigNumber.gte
-
-Returns a `boolean` representing if this instance is greater than or equal to the given argument.
-`BigNumber.greaterThanOrEqual` and `BigNumber.gte` are totally equivalent, the long or short syntax may be preferred.
-
-```ts
-const x = BigNumber.fromString("67.9");
-const y = BigNumber.fromString("67.9");
-
-console.log(x.greaterThanOrEqual(y)); // Prints true
-console.log(x.gte(y)); // Prints true
-```
-
-### BigNumber.lessThan _or_ BigNumber.lt
-
-Returns a `boolean` representing if this instance is strictly less than the given argument.
-`BigNumber.lessThan` and `BigNumber.lt` are totally equivalent, the long or short syntax may be preferred.
-
-```ts
-const x = BigNumber.fromString("67.8");
-const y = BigNumber.fromString("67.9");
-
-console.log(x.lessThan(y)); // Prints true
-console.log(x.lt(y)); // Prints true
-```
-
-### BigNumber.lessThanOrEqual _or_ BigNumber.lte
-
-Returns a `boolean` representing if this instance is less than or equal to the given argument.
-`BigNumber.lessThanOrEqual` and `BigNumber.lte` are totally equivalent, the long or short syntax may be preferred.
-
-```ts
-const x = BigNumber.fromString("67.9");
-const y = BigNumber.fromString("67.9");
-
-console.log(x.lessThanOrEqual(y)); // Prints true
-console.log(x.lte(y)); // Prints true
-```
-
-## Arithmetic Operations
-
-### BigNumber.add
-
-Adds this instance to the given argument and returns the result.
-
-```ts
-const x = BigNumber.fromString("126.289");
-const y = BigNumber.fromString("34.433");
-
-console.log(x.add(y).toString()); // Prints 160.722
-```
-
-### BigNumber.sub
-
-Substracts the given argument from this instance and returns the result.
-
-```ts
-const x = BigNumber.fromString("126.289");
-const y = BigNumber.fromString("34.433");
-
-console.log(x.sub(y).toString()); // Prints 91.856
-```
-
-### BigNumber.mul
-
-Multiplies this instance with the given argument and returns the result.
-
-**Note**: Rounds to the 18th precision.
-
-```ts
-const x = BigNumber.fromString("126.289");
-const y = BigNumber.fromString("34.433");
-
-console.log(x.mul(y).toString()); // Prints 4348.509137
-```
-
-### BigNumber.div
-
-Divides this instance with the given argument and returns the result.
-
-**Note**: Rounds to the 18th precision.
-
-```ts
-const x = BigNumber.fromString("126.289");
-const y = BigNumber.fromString("34.433");
-
-console.log(x.mul(y).toString()); // Prints 3.667673452792379403
-```
-
-### BigNumber.mod
-
-Returns the reminder of the division of this instance by the given argument.
-
-**Important**: This method uses `BigNumber.div` and `BigNumber.mul` to calculate the result of the reminder. As a result, in some rare cases including negative numbers the behaviour of this method may differ from the javascript `Number` class and the mod operator (`%`).
-
-```ts
-const x = BigNumber.fromString("126.289");
-const y = BigNumber.fromString("34.433");
-
-console.log(x.mod(y).toString()); // Prints 22.99
-```
+* Invalid strings, including `NaN` and infinity, throw a `SyntaxError`.
+* Values outside the supported range throw a `RangeError`.
+* Division or remainder by zero throws a `RangeError`.

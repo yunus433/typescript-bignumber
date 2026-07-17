@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    "lib": [
+      "ES2022"
+    ],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": true,
+    "strict": true,
+    "target": "ES2022",
+    "types": [
+      "jest"
+    ]
+  },
+  "include": [
+    "BigNumber.ts",
+    "BigNumber.test.ts",
+    "index.ts"
+  ]
+}
